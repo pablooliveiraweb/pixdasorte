@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // Correto: Importar como named export
+import {jwtDecode} from 'jwt-decode'; // Correto: Importar corretamente o jwt-decode
 
 const AuthContext = createContext();
 
@@ -25,13 +25,17 @@ const AuthProvider = ({ children }) => {
     setUser({ id: decoded.id, asaasCustomerId: decoded.asaasCustomerId });
   };
 
+  const register = async (userData) => {
+    await axios.post('http://localhost:5002/api/users/register', userData);
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {loading ? null : children}
     </AuthContext.Provider>
   );

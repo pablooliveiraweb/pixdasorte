@@ -7,21 +7,26 @@ const MyTickets = () => {
   const [cpf, setCpf] = useState('');
   const [error, setError] = useState('');
   const [isLogged, setIsLogged] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // Verifica se o usuário está logado
-    const loggedUser = JSON.parse(localStorage.getItem('user'));
-    if (loggedUser) {
-      setUser(loggedUser);
-      setIsLogged(true);
-      fetchTickets(loggedUser.cpf);
+    const token = localStorage.getItem('token');
+    if (token) {
+      const loggedUser = JSON.parse(localStorage.getItem('user'));
+      if (loggedUser) {
+        setIsLogged(true);
+        fetchTickets(loggedUser.cpf);
+      }
     }
   }, []);
 
   const fetchTickets = async (cpf) => {
     try {
-      const response = await axios.get(`http://localhost:5002/api/tickets/${cpf}`);
+      const response = await axios.get(`http://localhost:5002/api/tickets/${cpf}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       setTickets(response.data);
     } catch (err) {
       setError('Erro ao buscar bilhetes.');

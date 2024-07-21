@@ -17,6 +17,7 @@ const Register = () => {
     e.preventDefault();
     try {
       await register({ name, email, password, cpf, phone });
+      alert('Usuário registrado com sucesso!');
       navigate('/login');
     } catch (error) {
       setError('Falha no registro. Verifique seus dados.');

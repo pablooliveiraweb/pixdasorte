@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import '../styles/BuyTickets.css';
@@ -9,8 +8,7 @@ const BuyTickets = () => {
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
-  const [paymentInfo, setPaymentInfo] = useState(null);
-  const navigate = useNavigate();
+  const [paymentLink, setPaymentLink] = useState('');
 
   const generateRandomNumber = () => {
     return Math.floor(Math.random() * 10);
@@ -33,21 +31,28 @@ const BuyTickets = () => {
   const handlePayment = async () => {
     if (!user) {
       setError('Você precisa estar logado para comprar bilhetes.');
-      navigate('/login'); // Redirecionar para a página de login
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5002/api/payments/create-pix-charge', {
-        customer: user.asaasCustomerId,
-        billingType: 'PIX',
-        value: 5 * quantity,
-        dueDate: new Date().toISOString().split('T')[0],
-        description: 'Compra de bilhetes',
-        externalReference: 'Ref123',
-      });
+      const response = await axios.post(
+        'http://localhost:5002/api/payments/create-pix-charge',
+        {
+          customer: user.asaasCustomerId,
+          billingType: 'PIX',
+          value: 5 * quantity,
+          dueDate: new Date().toISOString().split('T')[0],
+          description: 'Compra de bilhetes',
+          externalReference: 'Ref123',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
 
-      setPaymentInfo(response.data);
+      setPaymentLink(response.data.invoiceUrl);
     } catch (err) {
       setError('Erro ao criar cobrança PIX.');
       console.error(err);
@@ -79,16 +84,11 @@ const BuyTickets = () => {
             </ul>
             <div className="payment-section">
               <p>Valor a pagar: R$ {5 * quantity}</p>
-              {user ? (
-                <button onClick={handlePayment}>Pagar meus Bilhetes</button>
-              ) : (
-                <button onClick={() => navigate('/login')}>Faça login para pagar</button>
-              )}
+              <button onClick={handlePayment}>Pagar meu Bilhetes</button>
             </div>
-            {paymentInfo && (
+            {paymentLink && (
               <div className="payment-info">
-                <p>Código PIX: {paymentInfo.pixCopiaECola}</p>
-                <img src={paymentInfo.pixQrCodeUrl} alt="QR Code" />
+                <p>Para pagar, clique no link: <a href={paymentLink} target="_blank" rel="noopener noreferrer">Pagamento PIX</a></p>
               </div>
             )}
           </div>
