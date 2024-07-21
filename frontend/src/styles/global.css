@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+.footer {
+  flex-shrink: 0;
+}

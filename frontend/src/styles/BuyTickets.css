@@ -1,0 +1,98 @@
+.buy-tickets-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.buy-tickets-box {
+  max-width: 650px;
+  width: 100%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.buy-tickets-box h2, .buy-tickets-box h3 {
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.generate-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.generate-section label {
+  margin-right: 10px;
+}
+
+.generate-section input {
+  width: 50px;
+  padding: 5px;
+  text-align: center;
+}
+
+.generate-section button {
+  background-color: #efc000;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.generate-section button:hover {
+  background-color: #ffd700;
+}
+
+.tickets-generated ul {
+  list-style: none;
+  padding: 0;
+}
+
+.tickets-generated li {
+  background-color: #292929;
+  padding: 10px;
+  color: aliceblue;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.payment-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.payment-section button {
+  background-color: #efc000;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.payment-section button:hover {
+  background-color: #ffd700;
+}
+
+.payment-info {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.payment-info img {
+  max-width: 200px;
+  margin-top: 10px;
+}
+
+.error {
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+}

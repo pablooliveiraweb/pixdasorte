@@ -1,0 +1,58 @@
+.my-tickets-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.my-tickets-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.tickets-list {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  max-width: 400px;
+}
+
+.tickets-list li {
+  background-color: #ffdf00;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.cpf-search {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cpf-search input {
+  padding: 10px;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  width: 300px;
+  max-width: 100%;
+}
+
+.cpf-search button {
+  background-color: #000;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
