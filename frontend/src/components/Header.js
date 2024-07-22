@@ -5,6 +5,7 @@ import '../styles/Header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  console.log("User in Header:", user); // Log do usuário no Header
 
   return (
     <header className="header">

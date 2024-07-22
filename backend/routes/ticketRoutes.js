@@ -1,16 +1,10 @@
 const express = require('express');
+const { buyTicket, getUserTickets, updateTicketStatus } = require('../controllers/ticketController');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
-const pool = require('../config/db');
 
-router.get('/:cpf', async (req, res) => {
-  const { cpf } = req.params;
-  try {
-    const tickets = await pool.query('SELECT * FROM tickets WHERE cpf = $1', [cpf]);
-    res.json(tickets.rows);
-  } catch (error) {
-    console.error('Erro ao buscar bilhetes:', error);
-    res.status(500).json({ error: 'Erro ao buscar bilhetes' });
-  }
-});
+router.post('/buy', protect, buyTicket);
+router.get('/user-tickets', protect, getUserTickets);
+router.put('/update-status', protect, updateTicketStatus);
 
 module.exports = router;

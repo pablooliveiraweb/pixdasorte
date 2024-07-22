@@ -4,15 +4,13 @@ import axios from 'axios';
 import '../styles/BuyTickets.css';
 
 const BuyTickets = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
-  const [paymentLink, setPaymentLink] = useState('');
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
-  const generateRandomNumber = () => {
-    return Math.floor(Math.random() * 10);
-  };
+  const generateRandomNumber = () => Math.floor(Math.random() * 10);
 
   const generateTicket = () => {
     const set1 = Array.from({ length: 5 }, generateRandomNumber).join('');
@@ -20,12 +18,33 @@ const BuyTickets = () => {
     return `${set1}, ${set2}`;
   };
 
-  const handleGenerateTickets = () => {
+  const handleGenerateTickets = async () => {
     const newTickets = [];
     for (let i = 0; i < quantity; i++) {
       newTickets.push(generateTicket());
     }
-    setTickets(newTickets);
+
+    console.log('Generated Tickets:', newTickets);
+
+    if (!token) {
+      setError('Token não encontrado. Por favor, faça login novamente.');
+      return;
+    }
+
+    try {
+      const ticketResponses = [];
+      for (let ticket of newTickets) {
+        console.log('Sending token:', token); // Log do token enviado
+        const response = await axios.post('http://localhost:5002/api/tickets/buy', { numbers: ticket }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        ticketResponses.push(response.data);
+      }
+      setTickets(ticketResponses);
+    } catch (err) {
+      console.error('Erro ao salvar bilhetes:', err);
+      setError('Erro ao salvar bilhetes.');
+    }
   };
 
   const handlePayment = async () => {
@@ -35,24 +54,15 @@ const BuyTickets = () => {
     }
 
     try {
-      const response = await axios.post(
-        'http://localhost:5002/api/payments/create-pix-charge',
-        {
-          customer: user.asaasCustomerId,
-          billingType: 'PIX',
-          value: 5 * quantity,
-          dueDate: new Date().toISOString().split('T')[0],
-          description: 'Compra de bilhetes',
-          externalReference: 'Ref123',
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const response = await axios.post('http://localhost:5002/api/payments/create-pix-charge', {
+        customer: user.asaasCustomerId,
+        value: 5 * quantity,
+        tickets: tickets.map(ticket => ticket.id), // Passando os IDs dos bilhetes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      setPaymentLink(response.data.invoiceUrl);
+      setPaymentInfo(response.data);
     } catch (err) {
       setError('Erro ao criar cobrança PIX.');
       console.error(err);
@@ -79,16 +89,16 @@ const BuyTickets = () => {
           <div className="tickets-generated">
             <ul>
               {tickets.map((ticket, index) => (
-                <li key={index}>{ticket}</li>
+                <li key={index}>{ticket.numbers}</li>
               ))}
             </ul>
             <div className="payment-section">
               <p>Valor a pagar: R$ {5 * quantity}</p>
-              <button onClick={handlePayment}>Pagar meu Bilhetes</button>
+              <button onClick={handlePayment}>Pagar meus Bilhetes</button>
             </div>
-            {paymentLink && (
+            {paymentInfo && (
               <div className="payment-info">
-                <p>Para pagar, clique no link: <a href={paymentLink} target="_blank" rel="noopener noreferrer">Pagamento PIX</a></p>
+                <p>Para pagar, clique no link: <a href={paymentInfo.invoiceUrl} target="_blank" rel="noopener noreferrer">Pagamento PIX</a></p>
               </div>
             )}
           </div>

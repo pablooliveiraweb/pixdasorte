@@ -1,40 +1,32 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
+      console.log('Token:', token); // Log do token recebido
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded JWT:', decoded); // Log do token decodificado
       req.user = decoded;
+
+      const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+      if (userResult.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
       next();
     } catch (error) {
+      console.error('Token verification error:', error.message);
+      if (error.message === 'jwt expired') {
+        return res.status(401).json({ message: 'Token expired' });
+      }
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 
-const admin = async (req, res, next) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-    const user = rows[0];
-
-    if (user && user.isAdmin) {
-      next();
-    } else {
-      res.status(401).json({ message: 'Not authorized as an admin' });
-    }
-  } catch (error) {
-    res.status(401).json({ message: 'Not authorized, token failed' });
-  }
-};
-
-module.exports = { protect, admin };
+module.exports = { protect };

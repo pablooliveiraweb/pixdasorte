@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 260px);
 }
 
 .my-tickets-container h2 {
@@ -19,11 +19,12 @@
 }
 
 .tickets-list li {
-  background-color: #ffdf00;
+  background-color: #ebb901;
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
   font-size: 18px;
+  font-weight: 700;
   text-align: center;
 }
 

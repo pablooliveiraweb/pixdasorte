@@ -14,6 +14,7 @@ router.post('/create-pix-charge', async (req, res) => {
   }
 
   try {
+    console.log('Creating PIX charge for customer:', customer);
     const response = await axios.post(
       `${ASAAS_API_URL}/payments`,
       {
@@ -32,9 +33,10 @@ router.post('/create-pix-charge', async (req, res) => {
       }
     );
 
+    console.log('PIX charge created:', response.data);
     res.json(response.data);
   } catch (error) {
-    console.error('Erro ao criar cobrança PIX:', error.response.data);
+    console.error('Erro ao criar cobrança PIX:', error.response?.data || error.message);
     res.status(500).json({ error: 'Erro ao criar cobrança PIX' });
   }
 });

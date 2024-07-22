@@ -1,65 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/MyTickets.css';
 
 const MyTickets = () => {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
-  const [cpf, setCpf] = useState('');
   const [error, setError] = useState('');
-  const [isLogged, setIsLogged] = useState(false);
 
   useEffect(() => {
-    // Verifica se o usuário está logado
-    const token = localStorage.getItem('token');
-    if (token) {
-      const loggedUser = JSON.parse(localStorage.getItem('user'));
-      if (loggedUser) {
-        setIsLogged(true);
-        fetchTickets(loggedUser.cpf);
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get('http://localhost:5002/api/tickets/user-tickets', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setTickets(response.data);
+      } catch (err) {
+        setError('Erro ao buscar bilhetes.');
+        console.error(err);
       }
-    }
-  }, []);
+    };
 
-  const fetchTickets = async (cpf) => {
-    try {
-      const response = await axios.get(`http://localhost:5002/api/tickets/${cpf}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setTickets(response.data);
-    } catch (err) {
-      setError('Erro ao buscar bilhetes.');
-      console.error(err);
+    if (user) {
+      fetchTickets();
     }
-  };
-
-  const handleSearch = () => {
-    fetchTickets(cpf);
-  };
+  }, [user]);
 
   return (
     <div className="my-tickets-container">
-      {isLogged ? (
-        <>
-          <h2>Meus Bilhetes</h2>
-          <ul className="tickets-list">
-            {tickets.map((ticket) => (
-              <li key={ticket.id}>{ticket.numbers}</li>
-            ))}
-          </ul>
-        </>
+      <h2>Meus Bilhetes</h2>
+      {tickets.length > 0 ? (
+        <ul className="tickets-list">
+          {tickets.map((ticket) => (
+            <li key={ticket.id}>
+              {ticket.numbers} - {ticket.status === 'paid' ? 'Pago' : 'Pendente'}
+            </li>
+          ))}
+        </ul>
       ) : (
-        <div className="cpf-search">
-          <h2>Buscar Bilhetes</h2>
-          <input
-            type="text"
-            placeholder="Digite o CPF"
-            value={cpf}
-            onChange={(e) => setCpf(e.target.value)}
-          />
-          <button onClick={handleSearch}>Buscar</button>
-        </div>
+        <p>Você não possui bilhetes.</p>
       )}
       {error && <p className="error">{error}</p>}
     </div>
