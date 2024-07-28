@@ -62,10 +62,7 @@ const LotteryList = () => {
 
   const handleDraw = async (id) => {
     const password = prompt('Digite a senha para realizar o sorteio:');
-    if (password !== 'Cpu031191*') {
-      setError('Senha incorreta');
-      return;
-    }
+    console.log('Senha digitada:', password);
 
     try {
       const response = await axios.post(`http://localhost:5002/api/lotteries/${id}/draw`, { password }, {

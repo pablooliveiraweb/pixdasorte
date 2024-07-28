@@ -59,7 +59,11 @@ const drawLottery = async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
 
+  console.log('Senha recebida:', password);
+  console.log('Senha esperada:', process.env.DRAW_PASSWORD);
+
   if (password !== process.env.DRAW_PASSWORD) {
+    console.log('Senha incorreta:', password);
     return res.status(401).json({ message: 'Senha incorreta' });
   }
 
