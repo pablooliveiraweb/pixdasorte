@@ -61,6 +61,11 @@ const BuyTickets = () => {
     setTickets([]);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(paymentInfo.payload);
+    alert('Código PIX copiado para a área de transferência!');
+  };
+
   return (
     <div className="buy-tickets-container">
       <div className="buy-tickets-box">
@@ -102,6 +107,18 @@ const BuyTickets = () => {
             {paymentInfo && (
               <div className="payment-info">
                 <p>Para pagar, clique no link: <a href={paymentInfo.invoiceUrl} target="_blank" rel="noopener noreferrer">Pagamento PIX</a></p>
+                {paymentInfo.encodedImage && (
+                  <div className="qrcode-section">
+                    <img src={'data:image/png;base64,' + paymentInfo.encodedImage} alt="QR Code" />
+                  </div>
+                )}
+                {paymentInfo.payload && (
+                  <div className="copy-paste-section">
+                    <p>Código copia e cola:</p>
+                    <textarea readOnly value={paymentInfo.payload} />
+                    <button onClick={handleCopy}>Copiar Código</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

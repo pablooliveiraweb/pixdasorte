@@ -12,10 +12,15 @@ const getAsaasApiKey = () => {
 };
 
 const getAsaasApiUrl = () => {
-  return ASAAS_MODE === 'production' 
+  return ASAAS_MODE === 'production'
     ? 'https://www.asaas.com/api/v3'
     : 'https://sandbox.asaas.com/api/v3';
 };
+
+const urlQr = (id) => ASAAS_MODE === 'production'
+  ? `https://www.asaas.com/api/v3/payments/${id}/pixQrCode`
+  : `https://sandbox.asaas.com/api/v3/payments/${id}/pixQrCode`;
+
 
 router.post('/create-pix-charge', async (req, res) => {
   const { customer, value } = req.body;
@@ -53,7 +58,16 @@ router.post('/create-pix-charge', async (req, res) => {
     );
 
     console.log('PIX charge created:', response.data);
-    res.json(response.data);
+
+    const responseQr = await axios.get(urlQr(response.data.id), {
+      headers: {
+        'Content-Type': 'application/json',
+        access_token: getAsaasApiKey(),
+      },
+    });
+    console.log(responseQr.data);
+
+    res.json({...response.data, ...responseQr.data});
   } catch (error) {
     console.error('Erro ao criar cobrança PIX:', error.response?.data || error.message);
     res.status(500).json({ error: 'Erro ao criar cobrança PIX' });

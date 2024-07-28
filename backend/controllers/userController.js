@@ -9,7 +9,8 @@ const generateToken = (user) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      asaasCustomerId: user.asaasCustomerId
+      asaascustomerid: user.asaascustomerid,
+      cpf: user.cpf,
     },
     process.env.JWT_SECRET,
     {

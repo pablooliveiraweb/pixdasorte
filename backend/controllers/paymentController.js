@@ -14,7 +14,8 @@ const createPixCharge = async (req, res) => {
       ? 'https://www.asaas.com/api/v3/payments'
       : 'https://sandbox.asaas.com/api/v3/payments';
 
-    const response = await axios.post(url, {
+      
+      const response = await axios.post(url, {
       customer,
       billingType: 'PIX',
       value,
@@ -27,6 +28,7 @@ const createPixCharge = async (req, res) => {
       },
     });
 
+    
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Erro ao criar cobrança PIX:', error);
