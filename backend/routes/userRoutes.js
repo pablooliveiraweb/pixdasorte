@@ -1,82 +1,62 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const axios = require('axios');
 const pool = require('../config/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+const { generateToken } = require('../utils/tokenUtils');
+const { protect, admin } = require('../middleware/authMiddleware');
 
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
-const ASAAS_API_URL = process.env.ASAAS_API_URL;
-
-const createAsaasCustomer = async (name, email, cpfCnpj, phone) => {
+// Função para criar um cliente no Asaas
+const createAsaasCustomer = async (name, email, cpf, phone) => {
   try {
     const response = await axios.post(
-      `${ASAAS_API_URL}/customers`,
+      'https://www.asaas.com/api/v3/customers',
       {
         name,
         email,
-        cpfCnpj,
+        cpfCnpj: cpf,
         phone,
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          'access_token': ASAAS_API_KEY,
+          access_token: process.env.ASAAS_API_KEY,
         },
       }
     );
-
     return response.data;
   } catch (error) {
-    console.error('Erro ao criar cliente no Asaas:', error.response?.data || error.message);
+    console.error('Erro ao criar cliente no Asaas:', error);
     throw new Error('Erro ao criar cliente no Asaas');
   }
 };
 
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      id: user.id,
-      name: user.name,
-      asaasCustomerId: user.asaasCustomerId,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: '1h',
-    }
-  );
-};
-
-router.post('/register', async (req, res) => {
+// Registrar usuário
+const registerUser = async (req, res) => {
   const { name, email, password, cpf, phone } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crie o cliente no Asaas
     const asaasCustomer = await createAsaasCustomer(name, email, cpf, phone);
-    console.log('Cliente Asaas criado:', asaasCustomer);
+    const asaasCustomerId = asaasCustomer.id;
 
-    // Salve o usuário no banco de dados
-    const id = uuidv4();
     const result = await pool.query(
-      'INSERT INTO users (id, name, email, password, cpf, phone, asaasCustomerId) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [id, name, email, hashedPassword, cpf, phone, asaasCustomer.id]
+      'INSERT INTO users (name, email, password, cpf, phone, asaasCustomerId) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, email, hashedPassword, cpf, phone, asaasCustomerId]
     );
 
     const user = result.rows[0];
     const token = generateToken(user);
-
-    res.json({ token });
+    console.log('Generated Token:', token); // Log do token gerado
+    res.status(201).json({ token });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ message: 'Erro ao registrar usuário' });
   }
-});
+};
 
-router.post('/login', async (req, res) => {
+// Login do usuário
+const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -85,13 +65,67 @@ router.post('/login', async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user);
+      console.log('Generated Token:', token); // Log do token gerado
       res.json({ token });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Credenciais inválidas' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Erro ao fazer login:', error);
+    res.status(500).json({ message: 'Erro ao fazer login' });
   }
-});
+};
+
+// Outras rotas...
+
+
+
+
+// Obter todos os usuários
+const getUsers = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao obter usuários:', error);
+    res.status(500).json({ message: 'Erro ao obter usuários' });
+  }
+};
+
+// Atualizar usuário
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, is_admin } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE users SET name = $1, email = $2, is_admin = $3 WHERE id = $4 RETURNING *',
+      [name, email, is_admin, id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ message: 'Erro ao atualizar usuário' });
+  }
+};
+
+// Excluir usuário
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ message: 'Usuário excluído com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    res.status(500).json({ message: 'Erro ao excluir usuário' });
+  }
+};
+
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.get('/', protect, admin, getUsers);
+router.put('/:id', protect, admin, updateUser);
+router.delete('/:id', protect, admin, deleteUser);
 
 module.exports = router;

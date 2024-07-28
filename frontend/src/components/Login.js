@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import axios from 'axios'; // Importar axios
 import { useAuth } from '../hooks/useAuth';
 import '../styles/Auth.css';
 
@@ -14,8 +15,10 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await login(email, password);
+      const response = await axios.post('http://localhost:5002/api/users/login', { email, password });
+      login(response.data.token); // Usar o token do response
       navigate(from, { replace: true });
     } catch (error) {
       setError('Falha no login. Verifique suas credenciais.');

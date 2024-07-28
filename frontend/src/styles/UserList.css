@@ -1,0 +1,25 @@
+.user-list {
+  padding: 20px;
+}
+
+.user-list h2 {
+  margin-bottom: 20px;
+}
+
+.user-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-list th, .user-list td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.user-list th {
+  background-color: #f4f4f4;
+}
+
+.user-list .error {
+  color: red;
+}

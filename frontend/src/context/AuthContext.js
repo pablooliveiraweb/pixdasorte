@@ -1,48 +1,49 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import {jwtDecode} from 'jwt-decode';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {jwtDecode} from 'jwt-decode'; // Certifique-se de usar jwtDecode e não jwtDecode
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      const decoded = jwtDecode(storedToken);
-      setUser({ id: decoded.id, name: decoded.name, asaasCustomerId: decoded.asaasCustomerId });
-      setToken(storedToken);
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token); // Decodificar o token corretamente
+        console.log('Decoded Token:', decodedToken); // Log do token decodificado
+        if (decodedToken.exp * 1000 < Date.now()) {
+          localStorage.removeItem('token');
+          setToken(null);
+          setUser(null);
+        } else {
+          setUser(decodedToken);
+        }
+      } catch (error) {
+        console.error('Invalid token:', error);
+        setToken(null);
+        setUser(null);
+      }
     }
-    setLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = async (email, password) => {
-    const response = await axios.post('http://localhost:5002/api/users/login', { email, password });
-    const { token } = response.data;
-    localStorage.setItem('token', token);
-    const decoded = jwtDecode(token);
-    setUser({ id: decoded.id, name: decoded.name, asaasCustomerId: decoded.asaasCustomerId });
-    setToken(token);
-  };
-
-  const register = async (userData) => {
-    await axios.post('http://localhost:5002/api/users/register', userData);
+  const login = (newToken) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    console.log('New Token Set:', newToken); // Log do novo token definido
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    setUser(null);
     setToken(null);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
-      {loading ? null : children}
+    <AuthContext.Provider value={{ token, user, login, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export { AuthProvider, AuthContext };
+export const useAuth = () => useContext(AuthContext);

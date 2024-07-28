@@ -1,30 +1,53 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const cors = require('cors');
-const { createUserTable } = require('./models/User');
-const { createTicketTable } = require('./models/Ticket');
-const { createLotteryTable } = require('./models/Lottery');
+const multer = require('multer');
+const uuid = require('uuid');
+const pool = require('./config/db');
+const userRoutes = require('./routes/userRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const lotteryRoutes = require('./routes/lotteryRoutes');
+const { errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// Rotas
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/tickets', require('./routes/ticketRoutes'));
-app.use('/api/lotteries', require('./routes/lotteryRoutes'));
-app.use('/api/payments', require('./routes/paymentRoutes')); // Adicione esta linha
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
-// Conectar ao banco e criar tabelas
-createUserTable();
-createTicketTable();
-createLotteryTable();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${uuid.v4()}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ storage });
+
+app.use('/api/users', userRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/lotteries', lotteryRoutes);
+
+app.post('/api/lotteries', upload.single('image'), (req, res, next) => {
+  next();
+});
+
+app.use('/uploads', express.static(uploadDir));
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5002;
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

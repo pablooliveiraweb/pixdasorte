@@ -1,0 +1,138 @@
+.admin-panel {
+  display: flex;
+  height: 100vh;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  width: 100%;
+}
+
+.admin-sidebar ul li {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.admin-sidebar ul li a {
+  text-decoration: none;
+  color: #fff;
+  background-color: #444;
+  padding: 10px;
+  display: block;
+  text-align: center;
+  border-radius: 5px;
+}
+
+.admin-sidebar ul li a:hover {
+  background-color: #555;
+}
+
+.admin-main {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #f4f4f4;
+  overflow-y: auto;
+}
+
+form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+form div {
+  margin-bottom: 15px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="number"],
+form input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+form button {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+form button:hover {
+  background-color: #218838;
+}
+
+.lottery-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.lottery-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 10px;
+  width: calc(33% - 20px);
+}
+
+.tickets-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.tickets-modal ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.tickets-modal ul li {
+  background: #f4f4f4;
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+}
+
+.tickets-modal button {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tickets-modal button:hover {
+  background-color: #c82333;
+}
