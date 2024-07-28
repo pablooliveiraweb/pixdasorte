@@ -10,6 +10,9 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const lotteryRoutes = require('./routes/lotteryRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const adminRoutes = require('./routes/adminRoutes');
+
+
 
 dotenv.config();
 
@@ -39,6 +42,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/lotteries', lotteryRoutes);
+app.use('/api/admin', adminRoutes);
+
 
 app.post('/api/lotteries', upload.single('image'), (req, res, next) => {
   next();

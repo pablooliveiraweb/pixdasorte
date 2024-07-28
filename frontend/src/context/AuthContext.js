@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {jwtDecode} from 'jwt-decode'; // Certifique-se de usar jwtDecode e não jwtDecode
+import {jwtDecode} from 'jwt-decode';
+import axios from 'axios';
 
 export const AuthContext = createContext();
 
@@ -10,8 +11,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       try {
-        const decodedToken = jwtDecode(token); // Decodificar o token corretamente
-        console.log('Decoded Token:', decodedToken); // Log do token decodificado
+        const decodedToken = jwtDecode(token);
+        console.log('Decoded Token:', decodedToken);
         if (decodedToken.exp * 1000 < Date.now()) {
           localStorage.removeItem('token');
           setToken(null);
@@ -27,10 +28,34 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const login = (newToken) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    console.log('New Token Set:', newToken); // Log do novo token definido
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post('http://localhost:5002/api/users/login', { email, password });
+      const { token } = response.data;
+      localStorage.setItem('token', token);
+      setToken(token);
+      const decodedToken = jwtDecode(token);
+      setUser(decodedToken);
+      console.log('New Token Set:', token);
+    } catch (error) {
+      console.error('Error during login:', error);
+      throw error;
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await axios.post('http://localhost:5002/api/users/register', userData);
+      const { token } = response.data;
+      localStorage.setItem('token', token);
+      setToken(token);
+      const decodedToken = jwtDecode(token);
+      setUser(decodedToken);
+      console.log('New Token Set:', token);
+    } catch (error) {
+      console.error('Error during registration:', error);
+      throw error;
+    }
   };
 
   const logout = () => {
@@ -40,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

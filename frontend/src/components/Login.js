@@ -1,25 +1,20 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios'; // Importar axios
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/Auth.css';
 
 const Login = () => {
-  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await axios.post('http://localhost:5002/api/users/login', { email, password });
-      login(response.data.token); // Usar o token do response
-      navigate(from, { replace: true });
+      await login(email, password);
+      navigate('/');
     } catch (error) {
       setError('Falha no login. Verifique suas credenciais.');
     }
@@ -45,9 +40,6 @@ const Login = () => {
         />
         <button type="submit">Entrar</button>
         {error && <p className="error">{error}</p>}
-        <div className="register-link">
-          <p>Não possui conta? <Link to="/register">Cadastre-se aqui</Link></p>
-        </div>
       </form>
     </div>
   );

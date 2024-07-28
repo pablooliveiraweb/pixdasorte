@@ -3,32 +3,51 @@ const axios = require('axios');
 const router = express.Router();
 require('dotenv').config();
 
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
-const ASAAS_API_URL = process.env.ASAAS_API_URL;
+const ASAAS_API_KEY_SANDBOX = process.env.ASAAS_API_KEY_SANDBOX;
+const ASAAS_API_KEY_PRODUCTION = process.env.ASAAS_API_KEY_PRODUCTION;
+const ASAAS_MODE = process.env.ASAAS_MODE || 'sandbox';
+
+const getAsaasApiKey = () => {
+  return ASAAS_MODE === 'production' ? ASAAS_API_KEY_PRODUCTION : ASAAS_API_KEY_SANDBOX;
+};
+
+const getAsaasApiUrl = () => {
+  return ASAAS_MODE === 'production' 
+    ? 'https://www.asaas.com/api/v3'
+    : 'https://sandbox.asaas.com/api/v3';
+};
 
 router.post('/create-pix-charge', async (req, res) => {
   const { customer, value } = req.body;
 
+  console.log('Received request to create PIX charge');
+  console.log('Customer:', customer);
+  console.log('Value:', value);
+
   if (!customer || !value) {
+    console.error('Customer and value are required');
     return res.status(400).json({ error: 'Customer and value are required' });
   }
 
   try {
-    console.log('Creating PIX charge for customer:', customer);
+    const payload = {
+      customer: customer,
+      billingType: 'PIX',
+      value: value,
+      dueDate: new Date().toISOString().slice(0, 10), // Data de vencimento
+      description: 'Compra de bilhetes',
+      externalReference: 'Ref123',
+    };
+
+    console.log('Creating PIX charge with payload:', payload);
+
     const response = await axios.post(
-      `${ASAAS_API_URL}/payments`,
-      {
-        customer: customer,
-        billingType: 'PIX',
-        value: value,
-        dueDate: new Date().toISOString().slice(0, 10), // Data de vencimento
-        description: 'Compra de bilhetes',
-        externalReference: 'Ref123',
-      },
+      `${getAsaasApiUrl()}/payments`,
+      payload,
       {
         headers: {
           'Content-Type': 'application/json',
-          'access_token': ASAAS_API_KEY,
+          'access_token': getAsaasApiKey(),
         },
       }
     );

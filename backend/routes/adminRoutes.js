@@ -3,7 +3,8 @@ const { getTickets, getUsers, drawLottery, getLotteryResults } = require('../con
 const { protect, admin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.get('/tickets', protect, admin, getTickets);
+router.get('/', protect, admin, (req, res) => {
+  res.send('Admin Dashboard');});
 router.get('/users', protect, admin, getUsers);
 router.post('/draw', protect, admin, drawLottery);
 router.get('/results', protect, admin, getLotteryResults);

@@ -37,18 +37,22 @@ const BuyTickets = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5002/api/payments/create-pix-charge', {
-        customer: user.asaasCustomerId,
+      const paymentPayload = {
+        customer: user.asaascustomerid,
         value: 5 * quantity,
         tickets: tickets.map(ticket => ticket.id),
-      }, {
+      };
+
+      console.log('Sending payment request with payload:', paymentPayload);
+
+      const response = await axios.post('http://localhost:5002/api/payments/create-pix-charge', paymentPayload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setPaymentInfo(response.data);
     } catch (err) {
+      console.error('Erro ao criar cobrança PIX:', err);
       setError('Erro ao criar cobrança PIX.');
-      console.error(err);
     }
   };
 

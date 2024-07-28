@@ -15,6 +15,9 @@ const protect = async (req, res, next) => {
       const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
       req.user = result.rows[0];
 
+      // Inclua o asaasCustomerId no req.user
+      req.user.asaasCustomerId = decoded.asaasCustomerId;
+
       next();
     } catch (error) {
       console.error('Token verification error:', error);

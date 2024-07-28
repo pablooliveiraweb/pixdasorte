@@ -1,4 +1,5 @@
-// paymentsController.js
+const axios = require('axios');
+
 const createPixCharge = async (req, res) => {
   const { customer, value, tickets } = req.body;
 
@@ -7,31 +8,32 @@ const createPixCharge = async (req, res) => {
   }
 
   try {
-    // Lógica para criar cobrança PIX usando a API do Asaas
-    const response = await axios.post(
-      'https://www.asaas.com/api/v3/payments',
-      {
-        customer,
-        billingType: 'PIX',
-        value,
-        dueDate: new Date().toISOString().split('T')[0], // Data de vencimento para hoje
-        description: `Compra de ${tickets.length} bilhetes`,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          access_token: process.env.ASAAS_API_KEY,
-        },
-      }
-    );
+    const mode = process.env.ASAAS_MODE === 'production' ? 'production' : 'sandbox';
+    const apiKey = mode === 'production' ? process.env.ASAAS_API_KEY_PRODUCTION : process.env.ASAAS_API_KEY_SANDBOX;
+    const url = mode === 'production' 
+      ? 'https://www.asaas.com/api/v3/payments'
+      : 'https://sandbox.asaas.com/api/v3/payments';
 
-    res.status(201).json(response.data);
+    const response = await axios.post(url, {
+      customer,
+      billingType: 'PIX',
+      value,
+      dueDate: new Date().toISOString().split('T')[0], // Data de vencimento para hoje
+      description: `Compra de ${tickets.length} bilhete(s) de loteria`
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        access_token: apiKey,
+      },
+    });
+
+    res.status(200).json(response.data);
   } catch (error) {
     console.error('Erro ao criar cobrança PIX:', error);
-    res.status(500).json({ error: 'Erro ao criar cobrança PIX' });
+    res.status(500).json({ message: 'Erro ao criar cobrança PIX', error: error.response ? error.response.data : error.message });
   }
 };
 
 module.exports = {
-  createPixCharge,
+  createPixCharge
 };
