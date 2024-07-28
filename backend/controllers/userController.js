@@ -10,19 +10,26 @@ const generateToken = (user) => {
       name: user.name,
       email: user.email,
       asaascustomerid: user.asaascustomerid,
-      cpf: user.cpf,
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: '1h',
+      expiresIn: '4h',
     }
   );
 };
 
 const createAsaasCustomer = async (name, email, cpf, phone) => {
+  const mode = process.env.ASAAS_MODE || 'sandbox';
+  const apiKey = mode === 'production' ? process.env.ASAAS_API_KEY_PRODUCTION : process.env.ASAAS_API_KEY_SANDBOX;
+  const apiUrl = process.env.ASAAS_API_URL;
+
+  console.log(`Using ${mode} mode for Asaas API`);
+  console.log(`API Key: ${apiKey}`);
+  console.log(`API URL: ${apiUrl}`);
+
   try {
     const response = await axios.post(
-      'https://www.asaas.com/api/v3/customers',
+      `${apiUrl}/customers`,
       {
         name,
         email,
@@ -32,13 +39,14 @@ const createAsaasCustomer = async (name, email, cpf, phone) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          access_token: process.env.ASAAS_API_KEY,
+          access_token: apiKey,
         },
       }
     );
+    console.log('Asaas response data:', response.data); // Adiciona este log para verificar a resposta
     return response.data;
   } catch (error) {
-    console.error('Erro ao criar cliente no Asaas:', error);
+    console.error('Erro ao criar cliente no Asaas:', error.response?.data || error.message);
     throw new Error('Erro ao criar cliente no Asaas');
   }
 };
@@ -52,7 +60,7 @@ const registerUser = async (req, res) => {
     const asaasCustomerId = asaasCustomer.id;
 
     const result = await pool.query(
-      'INSERT INTO users (name, email, password, cpf, phone, asaasCustomerId) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO users (name, email, password, cpf, phone, asaascustomerid) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [name, email, hashedPassword, cpf, phone, asaasCustomerId]
     );
 
@@ -60,7 +68,7 @@ const registerUser = async (req, res) => {
     const token = generateToken(user);
     res.status(201).json({ token });
   } catch (error) {
-    console.error('Erro ao registrar usuário:', error);
+    console.error('Erro ao registrar usuário:', error.message);
     res.status(500).json({ message: 'Erro ao registrar usuário' });
   }
 };
@@ -74,13 +82,13 @@ const loginUser = async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user);
-      res.json({ token });
+      res.json({ token, user });
     } else {
       res.status(401).json({ message: 'Credenciais inválidas' });
     }
   } catch (error) {
     console.error('Erro ao fazer login:', error);
-    res.status  .json({ message: 'Erro ao fazer login' });
+    res.status(500).json({ message: 'Erro ao fazer login' });
   }
 };
 
