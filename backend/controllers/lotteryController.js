@@ -59,11 +59,7 @@ const drawLottery = async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
 
-  console.log('Senha recebida:', password);
-  console.log('Senha esperada:', process.env.DRAW_PASSWORD);
-
   if (password !== process.env.DRAW_PASSWORD) {
-    console.log('Senha incorreta:', password);
     return res.status(401).json({ message: 'Senha incorreta' });
   }
 
@@ -87,13 +83,14 @@ const drawLottery = async (req, res) => {
     }
 
     const drawnTicket = tickets[Math.floor(Math.random() * tickets.length)];
+    const drawDate = new Date().toISOString();
 
     await pool.query(
-      'UPDATE lotteries SET drawn_ticket = $1 WHERE id = $2',
-      [drawnTicket.ticket_number, id]
+      'UPDATE lotteries SET drawn_ticket = $1, draw_date = $2 WHERE id = $3',
+      [drawnTicket.ticket_number, drawDate, id]
     );
 
-    res.status(200).json({ drawnTicket });
+    res.status(200).json({ drawnTicket, drawDate });
   } catch (error) {
     console.error('Erro ao realizar sorteio:', error);
     res.status(500).json({ message: 'Erro ao realizar sorteio' });

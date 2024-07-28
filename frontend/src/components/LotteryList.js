@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import Modal from 'react-modal';
 import '../styles/LotteryList.css';
 
+Modal.setAppElement('#root');
+
 const LotteryList = () => {
   const { token } = useAuth();
   const [lotteries, setLotteries] = useState([]);
@@ -11,13 +13,14 @@ const LotteryList = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [successModalIsOpen, setSuccessModalIsOpen] = useState(false);
 
   const fetchLotteries = async () => {
     try {
       const response = await axios.get('http://localhost:5002/api/lotteries', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setLotteries(response.data);
+      setLotteries(response.data.reverse()); // Inverte a ordem dos sorteios
     } catch (error) {
       console.error('Erro ao obter sorteios:', error);
       setError('Erro ao obter sorteios');
@@ -27,6 +30,16 @@ const LotteryList = () => {
   useEffect(() => {
     fetchLotteries();
   }, [token]);
+
+  useEffect(() => {
+    if (success) {
+      setSuccessModalIsOpen(true);
+      setTimeout(() => {
+        setSuccessModalIsOpen(false);
+        setSuccess('');
+      }, 3000);
+    }
+  }, [success]);
 
   const openModal = async (lottery) => {
     setModalIsOpen(true);
@@ -62,7 +75,10 @@ const LotteryList = () => {
 
   const handleDraw = async (id) => {
     const password = prompt('Digite a senha para realizar o sorteio:');
-    console.log('Senha digitada:', password);
+    if (password !== 'Cpu031191*') {
+      setError('Senha incorreta');
+      return;
+    }
 
     try {
       const response = await axios.post(`http://localhost:5002/api/lotteries/${id}/draw`, { password }, {
@@ -76,19 +92,39 @@ const LotteryList = () => {
     }
   };
 
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    return new Date(dateTime).toLocaleString('pt-BR', options);
+  };
+
   return (
     <div className="lottery-list-container">
-      <h2>Sorteios Criados</h2>
+      
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+      <Modal
+        isOpen={successModalIsOpen}
+        onRequestClose={() => setSuccessModalIsOpen(false)}
+        contentLabel="Sucesso"
+        className="react-modal-content"
+        overlayClassName="react-modal-overlay"
+      >
+        <div className="success-modal-content">
+          <p>{success}</p>
+          <div className="progress-bar"></div>
+        </div>
+      </Modal>
       {lotteries.map((lottery) => (
         <div key={lottery.id} className="lottery-card">
           <h3>{lottery.name}</h3>
-          <p>Data de Início: {new Date(lottery.start_date).toLocaleDateString()}</p>
-          <p>Data de Término: {new Date(lottery.end_date).toLocaleDateString()}</p>
+          <p>Data de Início: {new Date(lottery.start_date).toLocaleDateString('pt-BR')}</p>
+          <p>Data de Término: {new Date(lottery.end_date).toLocaleDateString('pt-BR')}</p>
           <p>Quantidade de Bilhetes: {lottery.ticket_quantity}</p>
           {lottery.drawn_ticket ? (
-            <p className="drawn-ticket">Bilhete Sorteado: {lottery.drawn_ticket}</p>
+            <>
+              <p className="drawn-ticket">Bilhete Sorteado: {lottery.drawn_ticket}</p>
+              <p className="draw-date">Sorteio realizado dia {formatDateTime(lottery.draw_date)}</p>
+            </>
           ) : (
             <button onClick={() => handleDraw(lottery.id)}>Realizar Sorteio</button>
           )}
@@ -96,7 +132,13 @@ const LotteryList = () => {
           <button onClick={() => handleDelete(lottery.id)}>Excluir</button>
         </div>
       ))}
-      <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Bilhetes do Sorteio">
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        contentLabel="Bilhetes do Sorteio"
+        className="react-modal-content"
+        overlayClassName="react-modal-overlay"
+      >
         <div className="modal-content">
           <h2>Bilhetes do Sorteio</h2>
           <button onClick={closeModal}>Fechar</button>

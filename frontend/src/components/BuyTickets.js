@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import Modal from 'react-modal';
 import '../styles/BuyTickets.css';
 
 const BuyTickets = () => {
@@ -9,41 +10,23 @@ const BuyTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
   const [paymentInfo, setPaymentInfo] = useState(null);
-
-  const generateRandomNumber = () => Math.floor(Math.random() * 10);
-
-  const generateTicket = () => {
-    const set1 = Array.from({ length: 5 }, generateRandomNumber).join('');
-    const set2 = Array.from({ length: 5 }, generateRandomNumber).join('');
-    return `${set1}, ${set2}`;
-  };
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const handleGenerateTickets = async () => {
-    const newTickets = [];
-    for (let i = 0; i < quantity; i++) {
-      newTickets.push(generateTicket());
-    }
-
-    console.log('Generated Tickets:', newTickets);
-
     if (!token) {
       setError('Token não encontrado. Por favor, faça login novamente.');
       return;
     }
 
     try {
-      const ticketResponses = [];
-      for (let ticket of newTickets) {
-        console.log('Sending token:', token); // Log do token enviado
-        const response = await axios.post('http://localhost:5002/api/tickets/buy', { numbers: ticket }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        ticketResponses.push(response.data);
-      }
-      setTickets(ticketResponses);
+      const response = await axios.get(`http://localhost:5002/api/tickets/available/${quantity}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTickets(response.data);
+      setModalIsOpen(true);
     } catch (err) {
-      console.error('Erro ao salvar bilhetes:', err);
-      setError('Erro ao salvar bilhetes.');
+      console.error('Erro ao obter bilhetes disponíveis:', err);
+      setError('Erro ao obter bilhetes disponíveis.');
     }
   };
 
@@ -57,7 +40,7 @@ const BuyTickets = () => {
       const response = await axios.post('http://localhost:5002/api/payments/create-pix-charge', {
         customer: user.asaasCustomerId,
         value: 5 * quantity,
-        tickets: tickets.map(ticket => ticket.id), // Passando os IDs dos bilhetes
+        tickets: tickets.map(ticket => ticket.id),
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -67,6 +50,11 @@ const BuyTickets = () => {
       setError('Erro ao criar cobrança PIX.');
       console.error(err);
     }
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setTickets([]);
   };
 
   return (
@@ -85,13 +73,24 @@ const BuyTickets = () => {
           />
           <button onClick={handleGenerateTickets}>GERAR BILHETES</button>
         </div>
-        {tickets.length > 0 && (
-          <div className="tickets-generated">
-            <ul>
-              {tickets.map((ticket, index) => (
-                <li key={index}>{ticket.numbers}</li>
+        {error && <p className="error">{error}</p>}
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          contentLabel="Bilhetes Disponíveis"
+          className="react-modal-content"
+          overlayClassName="react-modal-overlay"
+        >
+          <div className="modal-content">
+            <h2>Bilhetes Disponíveis</h2>
+            <button onClick={closeModal}>Fechar</button>
+            <div className="ticket-list-container">
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className="ticket-item">
+                  {ticket.ticket_number}
+                </div>
               ))}
-            </ul>
+            </div>
             <div className="payment-section">
               <p>Valor a pagar: R$ {5 * quantity}</p>
               <button onClick={handlePayment}>Pagar meus Bilhetes</button>
@@ -102,8 +101,7 @@ const BuyTickets = () => {
               </div>
             )}
           </div>
-        )}
-        {error && <p className="error">{error}</p>}
+        </Modal>
       </div>
     </div>
   );

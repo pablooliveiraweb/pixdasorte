@@ -60,4 +60,25 @@ const updateTicketStatus = async (req, res) => {
   }
 };
 
-module.exports = { buyTicket, getUserTickets, updateTicketStatus };
+const getAvailableTickets = async (req, res) => {
+  const { quantity } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM tickets WHERE is_purchased = FALSE LIMIT $1',
+      [quantity]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao obter bilhetes disponíveis:', error);
+    res.status(500).json({ message: 'Erro ao obter bilhetes disponíveis' });
+  }
+};
+
+module.exports = {
+  buyTicket,
+  getUserTickets,
+  updateTicketStatus,
+  getAvailableTickets,
+};
+

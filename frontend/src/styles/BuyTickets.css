@@ -1,30 +1,28 @@
+/* BuyTickets.css */
+
 .buy-tickets-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
-  padding: 20px;
+  align-items: center;
+  margin: 20px;
 }
 
 .buy-tickets-box {
-  max-width: 650px;
-  width: 100%;
-  background-color: #fff;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.buy-tickets-box h2, .buy-tickets-box h3 {
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  margin: 0 0 20px;
 }
 
 .generate-section {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .generate-section label {
@@ -32,67 +30,110 @@
 }
 
 .generate-section input {
-  width: 50px;
+  width: 60px;
   padding: 5px;
+  margin-right: 10px;
   text-align: center;
 }
 
 .generate-section button {
-  background-color: #efc000;
-  border: none;
   padding: 10px 20px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 4px;
   cursor: pointer;
-  border-radius: 5px;
 }
 
 .generate-section button:hover {
-  background-color: #ffd700;
+  background-color: #45a049;
+}
+
+.tickets-generated {
+  margin-top: 20px;
 }
 
 .tickets-generated ul {
-  list-style: none;
+  list-style-type: none;
   padding: 0;
 }
 
 .tickets-generated li {
-  background-color: #292929;
+  background-color: #e0e0e0;
   padding: 10px;
-  color: aliceblue;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 5px;
+  margin: 5px;
+  border-radius: 4px;
+  text-align: center;
 }
 
 .payment-section {
   margin-top: 20px;
-  text-align: center;
+}
+
+.payment-section p {
+  margin: 10px 0;
 }
 
 .payment-section button {
-  background-color: #efc000;
-  border: none;
   padding: 10px 20px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 4px;
   cursor: pointer;
-  border-radius: 5px;
 }
 
 .payment-section button:hover {
-  background-color: #ffd700;
+  background-color: #45a049;
 }
 
 .payment-info {
   margin-top: 20px;
-  text-align: center;
 }
 
-.payment-info img {
-  max-width: 200px;
-  margin-top: 10px;
+.payment-info p {
+  margin: 10px 0;
 }
 
 .error {
   color: red;
-  text-align: center;
   margin-top: 10px;
+}
+
+.react-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 4px;
+  outline: none;
+  padding: 20px;
+  width: 80%;
+  max-height: 70%;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.react-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.ticket-list-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ticket-item {
+  background-color: #e0e0e0;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
 }
