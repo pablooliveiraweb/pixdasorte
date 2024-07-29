@@ -5,7 +5,7 @@ const { ASAAS_API_KEY, ASAAS_API_URL } = process.env;
 
 // Função para comprar bilhete
 const buyTicket = async (req, res) => {
-  const { tickets } = req.body; // Array de tickets [{ ticket_number, lottery_id }]
+  const { tickets } = req.body; // Array de tickets [{ numbers, lottery_id }]
   const user_id = req.user.id;
   const payment_id = uuid.v4();
   const status = 'pending'; // Status inicial como pendente
@@ -23,8 +23,8 @@ const buyTicket = async (req, res) => {
     // Inserir tickets
     const ticketPromises = tickets.map(ticket =>
       pool.query(
-        'UPDATE tickets SET user_id = $1, status = $2, payment_id = $3 WHERE ticket_number = $4 AND lottery_id = $5 AND status = \'available\'',
-        [user_id, status, payment_id, ticket.ticket_number, ticket.lottery_id]
+        'INSERT INTO tickets (id, user_id, numbers, status, lottery_id, payment_id) VALUES ($1, $2, $3, $4, $5, $6)',
+        [uuid.v4(), user_id, ticket.numbers, status, ticket.lottery_id, payment_id]
       )
     );
     await Promise.all(ticketPromises);
@@ -38,7 +38,7 @@ const buyTicket = async (req, res) => {
         customer: req.user.asaascustomerid,
         billingType: 'PIX',
         value: paymentAmount,
-        dueDate: new Date(new Date().getTime() + 3 * 60000).toISOString(), // Prazo de pagamento 3 min
+        dueDate: new Date(new Date().getTime() + 5 * 60000).toISOString(), // Prazo de pagamento 5 min
         description: 'Compra de bilhetes',
         externalReference: payment_id,
       },
@@ -74,7 +74,7 @@ const getUserTickets = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT t.*, l.name AS lottery_name, COALESCE(p.status, 'pendente') AS payment_status
+      `SELECT t.*, l.name AS lottery_name, COALESCE(p.status, 'pending') AS payment_status
       FROM tickets t
       LEFT JOIN lotteries l ON t.lottery_id = l.id
       LEFT JOIN payments p ON t.payment_id = p.id
@@ -127,10 +127,24 @@ const getAvailableTickets = async (req, res) => {
   }
 };
 
+// Função para cancelar bilhetes
+const cancelTickets = async (req, res) => {
+  const { paymentId } = req.body;
+
+  try {
+    await pool.query('UPDATE tickets SET status = \'canceled\' WHERE payment_id = $1', [paymentId]);
+    await pool.query('UPDATE payments SET status = \'canceled\' WHERE id = $1', [paymentId]);
+    res.status(200).json({ message: 'Bilhetes cancelados com sucesso' });
+  } catch (error) {
+    console.error('Erro ao cancelar bilhetes:', error.message);
+    res.status(500).json({ error: 'Erro ao cancelar bilhetes' });
+  }
+};
+
 // Função para atualizar o status dos pagamentos periodicamente
 const updatePaymentStatusPeriodically = async () => {
   try {
-    const result = await pool.query('SELECT * FROM payments WHERE status = \'PENDING\'');
+    const result = await pool.query('SELECT * FROM payments WHERE status = \'pending\'');
 
     for (const payment of result.rows) {
       const response = await axios.get(`${ASAAS_API_URL}/payments/${payment.asaas_payment_id}`, {
@@ -141,7 +155,7 @@ const updatePaymentStatusPeriodically = async () => {
 
       const updatedStatus = response.data.status;
       await pool.query('UPDATE payments SET status = $1 WHERE id = $2', [updatedStatus, payment.id]);
-      await pool.query('UPDATE tickets SET status = $1 WHERE payment_id = $2', [updatedStatus === 'RECEIVED' ? 'paid' : 'pending', payment.id]);
+      await pool.query('UPDATE tickets SET status = $1 WHERE payment_id = $2', [updatedStatus === 'RECEIVED' ? 'paid' : 'available', payment.id]);
     }
   } catch (error) {
     console.error('Erro ao atualizar status dos pagamentos:', error.message);
@@ -156,4 +170,5 @@ module.exports = {
   getUserTickets,
   updateTicketStatus,
   getAvailableTickets,
+  cancelTickets,
 };

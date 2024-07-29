@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import '../styles/MyTickets.css';
 
 const MyTickets = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
 
@@ -12,9 +12,10 @@ const MyTickets = () => {
     const fetchTickets = async () => {
       try {
         const response = await axios.get('http://localhost:5002/api/tickets/user-tickets', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(response.data);
+        console.log('Tickets fetched:', response.data);
       } catch (err) {
         setError('Erro ao buscar bilhetes.');
         console.error(err);
@@ -24,7 +25,7 @@ const MyTickets = () => {
     if (user) {
       fetchTickets();
     }
-  }, [user]);
+  }, [user, token]);
 
   return (
     <div className="my-tickets-container">
@@ -33,7 +34,7 @@ const MyTickets = () => {
         <ul className="tickets-list">
           {tickets.map((ticket) => (
             <li key={ticket.id}>
-              {ticket.numbers} - {ticket.status === 'paid' ? 'Pago' : 'Pendente'}
+              {ticket.numbers} - {ticket.payment_status === 'RECEIVED' ? 'Pago' : 'Pendente'}
             </li>
           ))}
         </ul>

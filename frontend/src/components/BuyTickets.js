@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import Modal from 'react-modal';
@@ -11,6 +11,30 @@ const BuyTickets = () => {
   const [error, setError] = useState('');
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+
+  useEffect(() => {
+    let intervalId;
+
+    if (paymentInfo) {
+      intervalId = setInterval(async () => {
+        try {
+          const response = await axios.get(`http://localhost:5002/api/payments/check-payment-status/${paymentInfo.payment_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.status === 'RECEIVED') {
+            clearInterval(intervalId);
+            setPaymentInfo({ ...paymentInfo, status: 'RECEIVED' });
+          } else if (response.data.status !== 'PENDING') {
+            clearInterval(intervalId);
+          }
+        } catch (err) {
+          console.error('Erro ao verificar status do pagamento:', err);
+        }
+      }, 30000);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [paymentInfo, token]);
 
   const handleGenerateTickets = async () => {
     if (!token) {
@@ -40,7 +64,7 @@ const BuyTickets = () => {
       const paymentPayload = {
         customer: user.asaascustomerid,
         value: 5 * quantity,
-        tickets: tickets.map(ticket => ticket.id),
+        tickets: tickets.map(ticket => ({ numbers: ticket.numbers, lottery_id: ticket.lottery_id })),
       };
 
       console.log('Sending payment request with payload:', paymentPayload);
@@ -118,6 +142,7 @@ const BuyTickets = () => {
                     <button onClick={handleCopy}>Copiar Código</button>
                   </div>
                 )}
+                <div>Status do pagamento: {paymentInfo.status}</div>
               </div>
             )}
           </div>
