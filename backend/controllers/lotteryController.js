@@ -1,5 +1,7 @@
 const pool = require('../config/db');
+const uuid = require('uuid');
 
+// Função para criar sorteio
 const createLottery = async (req, res) => {
   const { name, startDate, endDate, ticketQuantity } = req.body;
   const image = req.file ? req.file.filename : null;
@@ -7,8 +9,8 @@ const createLottery = async (req, res) => {
   try {
     console.log('Dados recebidos:', { name, startDate, endDate, ticketQuantity, image });
     const result = await pool.query(
-      'INSERT INTO lotteries (name, start_date, end_date, ticket_quantity, image) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, startDate, endDate, ticketQuantity, image]
+      'INSERT INTO lotteries (id, name, start_date, end_date, ticket_quantity, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [uuid.v4(), name, startDate, endDate, ticketQuantity, image]
     );
 
     const lottery = result.rows[0];
@@ -21,8 +23,8 @@ const createLottery = async (req, res) => {
 
     for (const ticketNumber of tickets) {
       await pool.query(
-        'INSERT INTO tickets (lottery_id, ticket_number) VALUES ($1, $2)',
-        [lottery.id, ticketNumber]
+        'INSERT INTO tickets (id, lottery_id, ticket_number, status) VALUES ($1, $2, $3, $4)',
+        [uuid.v4(), lottery.id, ticketNumber, 'available']
       );
     }
 

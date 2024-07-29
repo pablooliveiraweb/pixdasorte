@@ -106,7 +106,6 @@ const BuyTickets = () => {
             </div>
             {paymentInfo && (
               <div className="payment-info">
-                <p>Para pagar, clique no link: <a href={paymentInfo.invoiceUrl} target="_blank" rel="noopener noreferrer">Pagamento PIX</a></p>
                 {paymentInfo.encodedImage && (
                   <div className="qrcode-section">
                     <img src={'data:image/png;base64,' + paymentInfo.encodedImage} alt="QR Code" />

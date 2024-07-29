@@ -1,24 +1,66 @@
 const pool = require('../config/db');
 const uuid = require('uuid');
+const axios = require('axios');
+const { ASAAS_API_KEY, ASAAS_API_URL } = process.env;
 
 // Função para comprar bilhete
 const buyTicket = async (req, res) => {
-  const { numbers } = req.body;
+  const { tickets } = req.body; // Array de tickets [{ ticket_number, lottery_id }]
   const user_id = req.user.id;
-  const id = uuid.v4();
+  const payment_id = uuid.v4();
   const status = 'pending'; // Status inicial como pendente
 
-  console.log('buyTicket:', { id, user_id, numbers, status }); // Adicione logs
-
-  const queryText = `
-    INSERT INTO tickets(id, user_id, numbers, status)
-    VALUES($1, $2, $3, $4)
-    RETURNING *
-  `;
   try {
-    const { rows } = await pool.query(queryText, [id, user_id, numbers, status]);
-    res.status(201).json(rows[0]);
+    await pool.query('BEGIN');
+
+    // Inserir pagamento
+    const paymentAmount = tickets.length * 5; // Valor total dos bilhetes
+    await pool.query(
+      'INSERT INTO payments (id, user_id, amount, status) VALUES ($1, $2, $3, $4)',
+      [payment_id, user_id, paymentAmount, status]
+    );
+
+    // Inserir tickets
+    const ticketPromises = tickets.map(ticket =>
+      pool.query(
+        'UPDATE tickets SET user_id = $1, status = $2, payment_id = $3 WHERE ticket_number = $4 AND lottery_id = $5 AND status = \'available\'',
+        [user_id, status, payment_id, ticket.ticket_number, ticket.lottery_id]
+      )
+    );
+    await Promise.all(ticketPromises);
+
+    await pool.query('COMMIT');
+
+    // Criar cobrança PIX na Asaas
+    const asaasResponse = await axios.post(
+      `${ASAAS_API_URL}/payments`,
+      {
+        customer: req.user.asaascustomerid,
+        billingType: 'PIX',
+        value: paymentAmount,
+        dueDate: new Date(new Date().getTime() + 3 * 60000).toISOString(), // Prazo de pagamento 3 min
+        description: 'Compra de bilhetes',
+        externalReference: payment_id,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          access_token: ASAAS_API_KEY,
+        },
+      }
+    );
+
+    const paymentData = asaasResponse.data;
+
+    // Atualizar payment_id na tabela de pagamentos
+    await pool.query(
+      'UPDATE payments SET asaas_payment_id = $1 WHERE id = $2',
+      [paymentData.id, payment_id]
+    );
+
+    res.status(201).json({ paymentData, payment_id });
   } catch (err) {
+    await pool.query('ROLLBACK');
     console.error('Erro ao salvar bilhete:', err);
     res.status(400).json({ error: err.message });
   }
@@ -26,54 +68,88 @@ const buyTicket = async (req, res) => {
 
 // Função para listar bilhetes do usuário
 const getUserTickets = async (req, res) => {
-  const user_id = req.user.id;
+  const userId = req.user.id;
 
-  console.log('getUserTickets:', { user_id }); // Adicione logs
+  console.log('getUserTickets:', { userId });
 
   try {
-    const { rows } = await pool.query('SELECT * FROM tickets WHERE user_id = $1', [user_id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Erro ao buscar bilhetes:', err);
-    res.status(400).json({ error: err.message });
+    const result = await pool.query(
+      `SELECT t.*, l.name AS lottery_name, COALESCE(p.status, 'pendente') AS payment_status
+      FROM tickets t
+      LEFT JOIN lotteries l ON t.lottery_id = l.id
+      LEFT JOIN payments p ON t.payment_id = p.id
+      WHERE t.user_id = $1`,
+      [userId]
+    );
+
+    console.log('User Tickets Result:', result.rows);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar bilhetes:', error.message);
+    res.status(500).json({ message: 'Erro ao buscar bilhetes' });
   }
 };
 
 // Função para atualizar o status do bilhete
 const updateTicketStatus = async (req, res) => {
-  const { ticketId, status } = req.body;
+  const { payment_id, status } = req.body;
 
-  console.log('updateTicketStatus:', { ticketId, status }); // Adicione logs
+  console.log('updateTicketStatus:', { payment_id, status });
 
-  const queryText = `
-    UPDATE tickets
-    SET status = $1
-    WHERE id = $2
-    RETURNING *
-  `;
   try {
-    const { rows } = await pool.query(queryText, [status, ticketId]);
-    res.json(rows[0]);
+    const { rows } = await pool.query(
+      `UPDATE tickets SET status = $1 
+      WHERE payment_id = $2 
+      RETURNING *`,
+      [status, payment_id]
+    );
+    res.json(rows);
   } catch (err) {
     console.error('Erro ao atualizar status do bilhete:', err);
     res.status(400).json({ error: err.message });
   }
 };
 
+// Função para obter bilhetes disponíveis
 const getAvailableTickets = async (req, res) => {
   const { quantity } = req.params;
 
   try {
     const result = await pool.query(
-      'SELECT * FROM tickets WHERE is_purchased = FALSE LIMIT $1',
+      'SELECT * FROM tickets WHERE status = \'available\' ORDER BY RANDOM() LIMIT $1',
       [quantity]
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Erro ao obter bilhetes disponíveis:', error);
+    console.error('Erro ao obter bilhetes disponíveis:', error.message);
     res.status(500).json({ message: 'Erro ao obter bilhetes disponíveis' });
   }
 };
+
+// Função para atualizar o status dos pagamentos periodicamente
+const updatePaymentStatusPeriodically = async () => {
+  try {
+    const result = await pool.query('SELECT * FROM payments WHERE status = \'PENDING\'');
+
+    for (const payment of result.rows) {
+      const response = await axios.get(`${ASAAS_API_URL}/payments/${payment.asaas_payment_id}`, {
+        headers: {
+          'access_token': ASAAS_API_KEY,
+        },
+      });
+
+      const updatedStatus = response.data.status;
+      await pool.query('UPDATE payments SET status = $1 WHERE id = $2', [updatedStatus, payment.id]);
+      await pool.query('UPDATE tickets SET status = $1 WHERE payment_id = $2', [updatedStatus === 'RECEIVED' ? 'paid' : 'pending', payment.id]);
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar status dos pagamentos:', error.message);
+  }
+};
+
+// Atualizar o status dos pagamentos a cada 30 segundos
+setInterval(updatePaymentStatusPeriodically, 30000);
 
 module.exports = {
   buyTicket,
@@ -81,4 +157,3 @@ module.exports = {
   updateTicketStatus,
   getAvailableTickets,
 };
-
