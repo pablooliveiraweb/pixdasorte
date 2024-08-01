@@ -16,16 +16,14 @@ const protect = async (req, res, next) => {
       req.user = result.rows[0];
 
       // Inclua o asaasCustomerId no req.user
-      req.user.asaasCustomerId = decoded.asaasCustomerId;
+      req.user.asaascustomerid = decoded.asaasCustomerId;
 
       next();
     } catch (error) {
       console.error('Token verification error:', error);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401).json({ message: 'Not authorized, no token' });
   }
 };

@@ -72,6 +72,28 @@
 }
 
 .ticket-list {
+  list-style: none;
+  padding: 0;
+}
+
+.ticket-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+  color: #f9f9f9;
+  font-weight: 800;
+  border-radius: 4px;
+  background-color: #3c3c3c; /* Cor padrão para bilhetes pendentes */
+}
+
+.ticket-item.paid {
+  background-color: #159332; /* Cor para bilhetes pagos */
+  border-color: #c3e6cb;
+  color: #f9f9f9;
+  font-weight: 600;
+}
+
+.ticket-list {
   display: flex;
   flex-wrap: wrap;
   list-style-type: none;

@@ -100,7 +100,6 @@ const LotteryList = () => {
 
   return (
     <div className="lottery-list-container">
-      
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <Modal
         isOpen={successModalIsOpen}
@@ -144,7 +143,9 @@ const LotteryList = () => {
           <button onClick={closeModal}>Fechar</button>
           <ul className="ticket-list">
             {tickets.map((ticket) => (
-              <li key={ticket.id}>{ticket.ticket_number}</li>
+              <li key={ticket.id} className={ticket.status === 'paid' ? 'ticket-item paid' : 'ticket-item'}>
+                {ticket.ticket_number}
+              </li>
             ))}
           </ul>
         </div>

@@ -1,59 +1,71 @@
 .my-tickets-container {
+  padding: 20px;
+}
+
+.tickets-grid {
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
-  height: calc(100vh - 260px);
+  gap: 20px;
 }
 
-.my-tickets-container h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
+.lottery-box {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.tickets-list {
-  list-style: none;
-  padding: 0;
-  width: 100%;
-  max-width: 400px;
-}
-
-.tickets-list li {
-  background-color: #ebb901;
-  padding: 10px;
+.lottery-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
   margin-bottom: 10px;
+}
+
+.lottery-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.lottery-details {
+  flex-grow: 1;
+}
+
+.lottery-details h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.lottery-details p {
+  margin: 0;
+}
+
+.ticket-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ticket-item {
+  flex: 1;
+  min-width: 150px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  font-size: 18px;
-  font-weight: 700;
+  padding: 10px;
   text-align: center;
+  transition: background-color 0.3s;
 }
 
-.cpf-search {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.ticket-item.paid {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
 }
 
-.cpf-search input {
-  padding: 10px;
-  font-size: 18px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  width: 300px;
-  max-width: 100%;
-}
-
-.cpf-search button {
-  background-color: #000;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.error {
-  color: red;
-  margin-top: 10px;
+.ticket-item.pending {
+  background-color: #d66d6d;
+  border-color: #d65a5a;
 }

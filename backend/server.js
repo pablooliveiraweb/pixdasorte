@@ -11,6 +11,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const lotteryRoutes = require('./routes/lotteryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const { releasePendingTickets, updatePaymentStatusPeriodically } = require('./controllers/cronController');
 
 dotenv.config();
 
@@ -18,6 +19,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Chamar os cron jobs
+releasePendingTickets();
+updatePaymentStatusPeriodically();
+
 
 const fs = require('fs');
 const uploadDir = path.join(__dirname, 'uploads');
@@ -47,6 +53,8 @@ app.post('/api/lotteries', upload.single('image'), (req, res, next) => {
 });
 
 app.use('/uploads', express.static(uploadDir));
+
+
 
 app.use(errorHandler);
 

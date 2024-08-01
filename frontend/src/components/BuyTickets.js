@@ -13,27 +13,20 @@ const BuyTickets = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   useEffect(() => {
-    let intervalId;
-
-    if (paymentInfo) {
-      intervalId = setInterval(async () => {
+    const fetchPaymentStatus = async () => {
+      if (paymentInfo) {
         try {
-          const response = await axios.get(`http://localhost:5002/api/payments/check-payment-status/${paymentInfo.payment_id}`, {
+          const response = await axios.get(`http://localhost:5002/api/payments/check-payment-status/${paymentInfo.id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (response.data.status === 'RECEIVED') {
-            clearInterval(intervalId);
-            setPaymentInfo({ ...paymentInfo, status: 'RECEIVED' });
-          } else if (response.data.status !== 'PENDING') {
-            clearInterval(intervalId);
-          }
+          setPaymentInfo({ ...paymentInfo, status: response.data.status });
         } catch (err) {
           console.error('Erro ao verificar status do pagamento:', err);
         }
-      }, 30000);
-    }
+      }
+    };
 
-    return () => clearInterval(intervalId);
+    fetchPaymentStatus();
   }, [paymentInfo, token]);
 
   const handleGenerateTickets = async () => {
@@ -64,7 +57,7 @@ const BuyTickets = () => {
       const paymentPayload = {
         customer: user.asaascustomerid,
         value: 5 * quantity,
-        tickets: tickets.map(ticket => ({ numbers: ticket.numbers, lottery_id: ticket.lottery_id })),
+        tickets: tickets.map(ticket => ({ id: ticket.id, numbers: ticket.ticket_number, lottery_id: ticket.lottery_id })),
       };
 
       console.log('Sending payment request with payload:', paymentPayload);
@@ -142,7 +135,7 @@ const BuyTickets = () => {
                     <button onClick={handleCopy}>Copiar Código</button>
                   </div>
                 )}
-                <div>Status do pagamento: {paymentInfo.status}</div>
+                
               </div>
             )}
           </div>
