@@ -23,16 +23,19 @@ body, html {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 90%; /* Limitar a largura máxima */
+  max-width: 50%; /* Limitar a largura máxima */
   margin-bottom: 40px;
 }
-.prize-image {
-  width: 100%;
 
+.prize-image {
+  max-width: 650px;
   max-height: 400px;
-  overflow: hidden;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* Ajustar a imagem sem distorção */
   margin-bottom: 20px;
 }
+
 .img-placeholder {
   height: 200px;
   background-color: #f0f0f0;

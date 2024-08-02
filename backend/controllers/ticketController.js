@@ -4,10 +4,8 @@ const axios = require('axios');
 const { ASAAS_API_KEY, ASAAS_API_URL } = process.env;
 
 // Função para comprar bilhete
-// Função para comprar bilhete
-// Função para comprar bilhete
 const buyTicket = async (req, res) => {
-  const { tickets } = req.body; // Array de tickets [{ numbers }]
+  const { tickets } = req.body; // Array de tickets [{ numbers, lottery_id }]
   const user_id = req.user.id;
   const payment_id = uuid.v4();
   const status = 'pending'; // Status inicial como pendente
@@ -15,30 +13,18 @@ const buyTicket = async (req, res) => {
   try {
     await pool.query('BEGIN');
 
-    // Obter sorteio ativo
-    const activeLotteryResult = await pool.query(
-      'SELECT id FROM lotteries WHERE drawn_ticket IS NULL ORDER BY start_date DESC LIMIT 1'
-    );
-
-    if (activeLotteryResult.rows.length === 0) {
-      await pool.query('ROLLBACK');
-      return res.status(400).json({ error: 'Nenhum sorteio ativo disponível' });
-    }
-
-    const activeLotteryId = activeLotteryResult.rows[0].id;
-
     // Inserir pagamento
     const paymentAmount = tickets.length * 5; // Valor total dos bilhetes
     await pool.query(
-      'INSERT INTO payments (id, user_id, amount, status) VALUES ($1, $2, $3, $4)',
-      [payment_id, user_id, paymentAmount, status]
+      'INSERT INTO payments (id, user_id, amount, status, lottery_id) VALUES ($1, $2, $3, $4, $5)',
+      [payment_id, user_id, paymentAmount, status, tickets[0].lottery_id]
     );
 
     // Inserir tickets
     const ticketPromises = tickets.map(ticket =>
       pool.query(
         'INSERT INTO tickets (id, user_id, numbers, status, lottery_id, payment_id) VALUES ($1, $2, $3, $4, $5, $6)',
-        [uuid.v4(), user_id, ticket.numbers, status, activeLotteryId, payment_id]
+        [uuid.v4(), user_id, ticket.numbers, status, ticket.lottery_id, payment_id]
       )
     );
     await Promise.all(ticketPromises);
@@ -79,6 +65,8 @@ const buyTicket = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+
 
 
 // Função para listar bilhetes do usuário

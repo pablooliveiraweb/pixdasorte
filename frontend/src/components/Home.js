@@ -6,12 +6,20 @@ import '../styles/Home.css';
 const Home = () => {
   const [lottery, setLottery] = useState(null);
   const [error, setError] = useState('');
+  const [accumulatedPrize, setAccumulatedPrize] = useState(0);
 
   useEffect(() => {
     const fetchActiveLottery = async () => {
       try {
         const response = await axios.get('http://localhost:5002/api/lotteries/active');
-        setLottery(response.data);
+        const lottery = response.data;
+        setLottery(lottery);
+
+        if (lottery) {
+          const prizeResponse = await axios.get(`http://localhost:5002/api/lotteries/${lottery.id}/total-paid-amount`);
+          const totalPaidAmount = prizeResponse.data.totalPaidAmount;
+          setAccumulatedPrize(totalPaidAmount * 0.7); // 70% do valor total pago
+        }
       } catch (err) {
         setError('Erro ao buscar o sorteio ativo.');
         console.error(err);
@@ -25,6 +33,7 @@ const Home = () => {
     <div className="home-container">
       <div className="prize-box">
         <h2>Prêmio acumulado</h2>
+        <p className="accumulated-prize">R$ {accumulatedPrize.toFixed(2)}</p>
         {lottery ? (
           <img src={`http://localhost:5002/uploads/${lottery.image}`} alt={lottery.name} className="prize-image" />
         ) : (

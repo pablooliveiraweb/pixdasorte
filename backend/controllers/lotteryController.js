@@ -129,6 +129,25 @@ const deleteLottery = async (req, res) => {
   }
 };
 
+const getTotalPaidAmount = async (req, res) => {
+  const { lotteryId } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT COALESCE(SUM(amount), 0) AS totalPaidAmount FROM payments WHERE lottery_id = $1 AND status = $2',
+      [lotteryId, 'RECEIVED']
+    );
+
+    const totalPaidAmount = result.rows[0].totalpaidamount;
+    res.json({ totalPaidAmount });
+  } catch (error) {
+    console.error('Erro ao buscar valor total dos bilhetes pagos:', error.message);
+    res.status(500).json({ message: 'Erro ao buscar valor total dos bilhetes pagos.' });
+  }
+};
+
+
+
 module.exports = {
   createLottery,
   getLotteries,
@@ -136,4 +155,5 @@ module.exports = {
   drawLottery,
   deleteLottery,
   getActiveLottery,
+  getTotalPaidAmount,
 };
