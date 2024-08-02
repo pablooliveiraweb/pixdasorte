@@ -20,11 +20,11 @@ const buyTicket = async (req, res) => {
       [payment_id, user_id, paymentAmount, status]
     );
 
-    // Atualizar tickets com o payment_id
+    // Inserir tickets
     const ticketPromises = tickets.map(ticket =>
       pool.query(
-        'UPDATE tickets SET user_id = $1, numbers = $2, status = $3, payment_id = $4 WHERE id = $5',
-        [user_id, ticket.numbers, status, payment_id, ticket.id]
+        'INSERT INTO tickets (id, user_id, numbers, status, lottery_id, payment_id) VALUES ($1, $2, $3, $4, $5, $6)',
+        [uuid.v4(), user_id, ticket.numbers, status, ticket.lottery_id, payment_id]
       )
     );
     await Promise.all(ticketPromises);
@@ -72,14 +72,16 @@ const getUserTickets = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT t.*, l.name AS lottery_name, l.start_date, l.end_date, 
-              CONCAT('/uploads/', l.image) AS lottery_image, COALESCE(p.status, 'pending') AS payment_status
-       FROM tickets t
-       LEFT JOIN lotteries l ON t.lottery_id = l.id
-       LEFT JOIN payments p ON t.payment_id = p.id
-       WHERE t.user_id = $1`,
+      `SELECT t.*, l.name AS lottery_name, l.image AS lottery_image, COALESCE(p.status, 'pending') AS payment_status, l.drawn_ticket, l.winner_user_id, u.name AS winner_name
+      FROM tickets t
+      LEFT JOIN lotteries l ON t.lottery_id = l.id
+      LEFT JOIN payments p ON t.payment_id = p.id
+      LEFT JOIN users u ON l.winner_user_id = u.id
+      WHERE t.user_id = $1`,
       [userId]
     );
+
+    console.log('User Tickets Result:', result.rows); // Adicione este log
 
     res.json(result.rows);
   } catch (error) {

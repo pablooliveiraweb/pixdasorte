@@ -75,11 +75,11 @@ const LotteryList = () => {
 
   const handleDraw = async (id) => {
     const password = prompt('Digite a senha para realizar o sorteio:');
-    if (password !== 'Cpu031191*') {
-      setError('Senha incorreta');
+    if (!password) {
+      setError('Senha é obrigatória');
       return;
     }
-
+  
     try {
       const response = await axios.post(`http://localhost:5002/api/lotteries/${id}/draw`, { password }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -91,6 +91,7 @@ const LotteryList = () => {
       setError('Erro ao realizar sorteio');
     }
   };
+  
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '';

@@ -35,6 +35,25 @@ const createLottery = async (req, res) => {
   }
 };
 
+const getActiveLottery = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM lotteries 
+      WHERE drawn_ticket IS NULL 
+      ORDER BY start_date DESC LIMIT 1`
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Nenhum sorteio ativo encontrado.' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar o sorteio ativo:', error.message);
+    res.status(500).json({ message: 'Erro ao buscar o sorteio ativo.' });
+  }
+};
+
 const getLotteries = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM lotteries');
@@ -61,41 +80,38 @@ const drawLottery = async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
 
+  // Verifique a senha
   if (password !== process.env.DRAW_PASSWORD) {
-    return res.status(401).json({ message: 'Senha incorreta' });
+    return res.status(401).json({ error: 'Senha incorreta' });
   }
 
   try {
-    const lotteryResult = await pool.query('SELECT * FROM lotteries WHERE id = $1', [id]);
-    const lottery = lotteryResult.rows[0];
-
-    if (!lottery) {
-      return res.status(404).json({ message: 'Sorteio não encontrado' });
-    }
-
-    if (lottery.drawn_ticket) {
-      return res.status(400).json({ message: 'Sorteio já realizado' });
-    }
-
-    const ticketsResult = await pool.query('SELECT * FROM tickets WHERE lottery_id = $1', [id]);
-    const tickets = ticketsResult.rows;
-
-    if (tickets.length === 0) {
-      return res.status(400).json({ message: 'Nenhum bilhete para sortear' });
-    }
-
-    const drawnTicket = tickets[Math.floor(Math.random() * tickets.length)];
-    const drawDate = new Date().toISOString();
-
-    await pool.query(
-      'UPDATE lotteries SET drawn_ticket = $1, draw_date = $2 WHERE id = $3',
-      [drawnTicket.ticket_number, drawDate, id]
+    // Obtenha todos os bilhetes pagos para este sorteio
+    const result = await pool.query(
+      'SELECT * FROM tickets WHERE lottery_id = $1 AND status = $2',
+      [id, 'paid']
     );
 
-    res.status(200).json({ drawnTicket, drawDate });
-  } catch (error) {
-    console.error('Erro ao realizar sorteio:', error);
-    res.status(500).json({ message: 'Erro ao realizar sorteio' });
+    const tickets = result.rows;
+
+    if (tickets.length === 0) {
+      return res.status(400).json({ error: 'Nenhum bilhete comprado para sorteio' });
+    }
+
+    // Selecione um bilhete aleatório
+    const randomIndex = Math.floor(Math.random() * tickets.length);
+    const drawnTicket = tickets[randomIndex];
+
+    // Atualize o sorteio com o bilhete sorteado e o usuário vencedor
+    await pool.query(
+      'UPDATE lotteries SET drawn_ticket = $1, winner_user_id = $2 WHERE id = $3',
+      [drawnTicket.ticket_number, drawnTicket.user_id, id]
+    );
+
+    res.json({ drawnTicket: drawnTicket.ticket_number, winner: drawnTicket.user_id });
+  } catch (err) {
+    console.error('Erro ao realizar sorteio:', err.message);
+    res.status(500).json({ error: 'Erro ao realizar sorteio' });
   }
 };
 
@@ -118,4 +134,5 @@ module.exports = {
   getTicketsByLotteryId,
   drawLottery,
   deleteLottery,
+  getActiveLottery,
 };

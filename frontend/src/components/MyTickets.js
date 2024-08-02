@@ -14,6 +14,7 @@ const MyTickets = () => {
         const response = await axios.get('http://localhost:5002/api/tickets/user-tickets', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('Tickets fetched:', response.data); // Adicione este log
         groupTicketsByLottery(response.data);
       } catch (err) {
         setError('Erro ao buscar bilhetes.');
@@ -33,7 +34,10 @@ const MyTickets = () => {
           lotteryName: ticket.lottery_name,
           startDate: ticket.start_date,
           endDate: ticket.end_date,
-          image: ticket.lottery_image,
+          image: ticket.lottery_image ? `http://localhost:5002/uploads/${ticket.lottery_image}` : null,
+          paymentStatus: ticket.payment_status,
+          drawnTicket: ticket.drawn_ticket,
+          winner: ticket.winner_user_id === user.id ? 'Você' : ticket.winner_name,
           tickets: []
         };
       }
@@ -57,18 +61,30 @@ const MyTickets = () => {
           {ticketsGroupedByLottery.map((lottery) => (
             <div key={lottery.lotteryName} className="lottery-box">
               <div className="lottery-info">
-                <img src={`http://localhost:5002/uploads/${lottery.image}`} alt={lottery.lotteryName} className="lottery-image" />
+                {lottery.image ? (
+                  <img src={lottery.image} alt={lottery.lotteryName} className="lottery-image" />
+                ) : (
+                  <div className="img-placeholder">Imagem não disponível</div>
+                )}
                 <div className="lottery-details">
                   <h3>{lottery.lotteryName}</h3>
                   <p>Início: {formatDateTime(lottery.startDate)}</p>
                   <p>Término: {formatDateTime(lottery.endDate)}</p>
+                  <p className={`status ${lottery.paymentStatus === 'RECEIVED' ? '' : 'pending'}`}>
+                    Pagamento: {lottery.paymentStatus === 'RECEIVED' ? 'Recebido' : 'Pendente'}
+                  </p>
+                  {lottery.drawnTicket && (
+                    <>
+                      <p>Bilhete Sorteado: {lottery.drawnTicket}</p>
+                      <p>Ganhador: {lottery.winner}</p>
+                    </>
+                  )}
                 </div>
               </div>
-              <div className="ticket-list">
-                {lottery.tickets.map((ticket) => (
-                  <div key={ticket.id} className={`ticket-item ${ticket.payment_status === 'RECEIVED' ? 'paid' : 'pending'}`}>
-                    <p>Número: {ticket.numbers}</p>
-                    <p>Status: {ticket.payment_status === 'RECEIVED' ? 'Pago' : 'Pendente'}</p>
+              <div className="ticket-list-my">
+                {lottery.tickets.map((ticket, index) => (
+                  <div key={ticket.id} className="ticket-item">
+                    <p className='bilhete-p'>Bilhete:<br /> <span className='ticket-p'>{ticket.numbers}</span></p>
                   </div>
                 ))}
               </div>

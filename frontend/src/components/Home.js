@@ -1,13 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/Home.css';
 
 const Home = () => {
+  const [lottery, setLottery] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchActiveLottery = async () => {
+      try {
+        const response = await axios.get('http://localhost:5002/api/lotteries/active');
+        setLottery(response.data);
+      } catch (err) {
+        setError('Erro ao buscar o sorteio ativo.');
+        console.error(err);
+      }
+    };
+
+    fetchActiveLottery();
+  }, []);
+
   return (
     <div className="home-container">
       <div className="prize-box">
         <h2>Prêmio acumulado</h2>
-        <div className="img-placeholder">img do prêmio</div>
+        {lottery ? (
+          <img src={`http://localhost:5002/uploads/${lottery.image}`} alt={lottery.name} className="prize-image" />
+        ) : (
+          <div className="img-placeholder">img do prêmio</div>
+        )}
+        {error && <p className="error">{error}</p>}
         <Link to="/buy-tickets" className="buy-tickets-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-ticket">
             <path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4"></path>
