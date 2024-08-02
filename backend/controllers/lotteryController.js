@@ -88,7 +88,7 @@ const drawLottery = async (req, res) => {
   try {
     // Obtenha todos os bilhetes pagos para este sorteio
     const result = await pool.query(
-      'SELECT * FROM tickets WHERE lottery_id = $1 AND status = $2',
+      'SELECT t.*, u.name AS winner_name FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.lottery_id = $1 AND t.status = $2',
       [id, 'paid']
     );
 
@@ -104,16 +104,17 @@ const drawLottery = async (req, res) => {
 
     // Atualize o sorteio com o bilhete sorteado e o usuário vencedor
     await pool.query(
-      'UPDATE lotteries SET drawn_ticket = $1, winner_user_id = $2 WHERE id = $3',
-      [drawnTicket.ticket_number, drawnTicket.user_id, id]
+      'UPDATE lotteries SET drawn_ticket = $1, winner_user_id = $2, winner_name = $3 WHERE id = $4',
+      [drawnTicket.ticket_number, drawnTicket.user_id, drawnTicket.winner_name, id]
     );
 
-    res.json({ drawnTicket: drawnTicket.ticket_number, winner: drawnTicket.user_id });
+    res.json({ drawnTicket: drawnTicket.ticket_number, winner: drawnTicket.winner_name });
   } catch (err) {
     console.error('Erro ao realizar sorteio:', err.message);
     res.status(500).json({ error: 'Erro ao realizar sorteio' });
   }
 };
+
 
 const deleteLottery = async (req, res) => {
   const { id } = req.params;

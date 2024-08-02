@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
+import { FaTrophy } from 'react-icons/fa';
 import '../styles/MyTickets.css';
 
 const MyTickets = () => {
@@ -14,7 +15,7 @@ const MyTickets = () => {
         const response = await axios.get('http://localhost:5002/api/tickets/user-tickets', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('Tickets fetched:', response.data); // Adicione este log
+        console.log('Tickets fetched:', response.data);
         groupTicketsByLottery(response.data);
       } catch (err) {
         setError('Erro ao buscar bilhetes.');
@@ -44,12 +45,15 @@ const MyTickets = () => {
       acc[ticket.lottery_id].tickets.push(ticket);
       return acc;
     }, {});
-    setTicketsGroupedByLottery(Object.values(grouped));
+
+    // Convert the object to an array and sort it by startDate in descending order
+    const sortedGrouped = Object.values(grouped).sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    setTicketsGroupedByLottery(sortedGrouped);
   };
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '';
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit',  };
     return new Date(dateTime).toLocaleString('pt-BR', options);
   };
 
@@ -74,17 +78,19 @@ const MyTickets = () => {
                     Pagamento: {lottery.paymentStatus === 'RECEIVED' ? 'Recebido' : 'Pendente'}
                   </p>
                   {lottery.drawnTicket && (
-                    <>
-                      <p>Bilhete Sorteado: {lottery.drawnTicket}</p>
-                      <p>Ganhador: {lottery.winner}</p>
-                    </>
+                    <div className="winner-info">
+                      <p><strong>Bilhete Sorteado:</strong><span>{lottery.drawnTicket}</span> </p>
+                      <p className="winner-highlight">
+                        <FaTrophy /> <strong> Ganhador: </strong> {lottery.winner}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
               <div className="ticket-list-my">
                 {lottery.tickets.map((ticket, index) => (
                   <div key={ticket.id} className="ticket-item">
-                    <p className='bilhete-p'>Bilhete:<br /> <span className='ticket-p'>{ticket.numbers}</span></p>
+                    <p className='bilhete-p'>Bilhete:<br /><span className='ticket-p'>{ticket.numbers}</span></p>
                   </div>
                 ))}
               </div>
