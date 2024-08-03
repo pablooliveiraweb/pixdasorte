@@ -47,7 +47,16 @@ const getActiveLottery = async (req, res) => {
       return res.status(404).json({ message: 'Nenhum sorteio ativo encontrado.' });
     }
 
-    res.json(result.rows[0]);
+    const lottery = result.rows[0];
+
+    const paymentResult = await pool.query(
+      'SELECT COALESCE(SUM(amount), 0) AS totalPaidAmount FROM payments WHERE lottery_id = $1 AND status = $2',
+      [lottery.id, 'RECEIVED']
+    );
+
+    lottery.totalPaidAmount = paymentResult.rows[0].totalpaidamount * 0.7;
+
+    res.json(lottery);
   } catch (error) {
     console.error('Erro ao buscar o sorteio ativo:', error.message);
     res.status(500).json({ message: 'Erro ao buscar o sorteio ativo.' });
@@ -146,6 +155,23 @@ const getTotalPaidAmount = async (req, res) => {
   }
 };
 
+const getAccumulatedPrize = async (req, res) => {
+  const { id } = req.params; // ID do sorteio
+
+  try {
+    const result = await pool.query(
+      'SELECT COALESCE(SUM(amount), 0) AS totalPaidAmount FROM payments WHERE lottery_id = $1 AND status = $2',
+      [id, 'RECEIVED']
+    );
+
+    const totalPaidAmount = result.rows[0].totalpaidamount;
+    const accumulatedPrize = totalPaidAmount * 0.7; // 70% do valor total pago
+    res.json({ accumulatedPrize });
+  } catch (error) {
+    console.error('Erro ao buscar valor total dos bilhetes pagos:', error.message);
+    res.status(500).json({ message: 'Erro ao buscar valor total dos bilhetes pagos.' });
+  }
+};
 
 
 module.exports = {
@@ -156,4 +182,5 @@ module.exports = {
   deleteLottery,
   getActiveLottery,
   getTotalPaidAmount,
+  getAccumulatedPrize,
 };

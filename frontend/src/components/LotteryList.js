@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import Modal from 'react-modal';
@@ -15,7 +15,7 @@ const LotteryList = () => {
   const [success, setSuccess] = useState('');
   const [successModalIsOpen, setSuccessModalIsOpen] = useState(false);
 
-  const fetchLotteries = async () => {
+  const fetchLotteries = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:5002/api/lotteries', {
         headers: { Authorization: `Bearer ${token}` },
@@ -25,11 +25,11 @@ const LotteryList = () => {
       console.error('Erro ao obter sorteios:', error);
       setError('Erro ao obter sorteios');
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchLotteries();
-  }, [token]);
+  }, [fetchLotteries]);
 
   useEffect(() => {
     if (success) {
@@ -79,7 +79,7 @@ const LotteryList = () => {
       setError('Senha é obrigatória');
       return;
     }
-  
+
     try {
       const response = await axios.post(`http://localhost:5002/api/lotteries/${id}/draw`, { password }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -91,7 +91,6 @@ const LotteryList = () => {
       setError('Erro ao realizar sorteio');
     }
   };
-  
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '';

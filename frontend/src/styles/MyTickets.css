@@ -54,6 +54,11 @@ body, html {
   flex: 1;
 }
 
+.lottery-details h3{
+  font-size: 1.6rem;
+  margin-bottom: -7px;
+}
+
 .lottery-details p.status {
   background-color: rgb(184, 241, 127); 
   padding: 12px;

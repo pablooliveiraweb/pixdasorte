@@ -1,0 +1,54 @@
+.dashboard-container {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.error {
+  color: red;
+  text-align: center;
+}
+
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.user-count-container, .lottery-summary-container, .winner-list-container {
+  background: #f9f9f9;
+  padding: 20px;
+  
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  
+}
+
+.winner-list-container:last-child{
+  margin-bottom: 60px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #f1f1f1;
+}
+
+.winner-highlight {
+  background: #beeba4;
+  font-weight: bold;
+  border-radius: 2px !important;
+}

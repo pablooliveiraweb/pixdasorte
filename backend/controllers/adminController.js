@@ -54,4 +54,55 @@ const generateRandomNumbers = () => {
   return Array.from({ length: 6 }, () => Math.floor(Math.random() * 60) + 1).join(', ');
 };
 
-module.exports = { getTickets, getUsers, drawLottery, getLotteryResults };
+// Função para contar usuários cadastrados
+const getUserCount = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) AS count FROM users');
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao contar usuários:', error);
+    res.status(500).json({ message: 'Erro ao contar usuários.' });
+  }
+};
+
+const getLotterySummary = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT l.id, l.name, COALESCE(SUM(p.amount), 0) AS totalpaidamount
+      FROM lotteries l
+      LEFT JOIN payments p ON l.id = p.lottery_id AND p.status = 'RECEIVED'
+      GROUP BY l.id, l.name
+      ORDER BY l.start_date DESC
+      LIMIT 5
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao obter resumo dos sorteios:', error);
+    res.status(500).json({ message: 'Erro ao obter resumo dos sorteios.' });
+  }
+};
+
+const getWinners = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT l.id AS lottery_id, l.name AS lottery_name, u.name AS winner_name
+      FROM lotteries l
+      JOIN users u ON l.winner_user_id = u.id
+      ORDER BY l.start_date DESC
+      LIMIT 5
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao obter vencedores:', error);
+    res.status(500).json({ message: 'Erro ao obter vencedores.' });
+  }
+};
+
+module.exports = { 
+  getTickets, 
+  getUsers, 
+  drawLottery, 
+  getUserCount,
+  getLotterySummary,
+  getWinners, 
+};

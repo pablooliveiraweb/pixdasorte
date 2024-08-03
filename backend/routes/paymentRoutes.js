@@ -77,11 +77,13 @@ router.post('/create-pix-charge',protect, async (req, res) => {
     console.log('PIX QR response:', responseQr.data);
 
     const payment_id = uuid.v4();
-
+ const lotteries  = await pool.query(
+  'SELECT * FROM lotteries WHERE drawn_ticket IS NULL'
+ )
     // Salvar pagamento no banco de dados
     await pool.query(
-      'INSERT INTO payments (id, user_id, amount, status, asaas_payment_id) VALUES ($1, $2, $3, $4, $5)',
-      [payment_id, req.user.id, value, 'pending', response.data.id]
+      'INSERT INTO payments (id, user_id, amount, status, asaas_payment_id, lottery_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      [payment_id, req.user.id, value, 'pending', response.data.id, lotteries.rows[0].id]
     );
 
     // Salvar tickets com o payment_id
