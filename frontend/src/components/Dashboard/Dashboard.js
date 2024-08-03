@@ -47,7 +47,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <h1>Painel Administrativo</h1>
+      
       {error && <p className="error">{error}</p>}
       <div className="dashboard-section">
         <UserCount count={userCount} users={users} />

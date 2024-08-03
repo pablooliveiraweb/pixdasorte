@@ -3,7 +3,7 @@ import React from 'react';
 const WinnerList = ({ winners }) => {
   return (
     <div className="winner-list-container">
-      <h2>Ganhadores Recentes</h2>
+      <h2>Pessoas Contempladas</h2>
       <table>
         <thead>
           <tr>

@@ -28,6 +28,22 @@ h1 {
   
 }
 
+.user-count-container ul li{
+  list-style: none;
+  padding: 5px;
+  background-color: rgb(255, 255, 255);
+  margin-bottom: 2px;
+  width: 90%;
+  border-bottom: 1px solid #d7d7d7;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-weight: 600;
+  border-left: 3px solid #beeba4;
+}
+
+.user-count-container h4, h2{
+  color: rgb(48, 48, 48);
+}
+
 .winner-list-container:last-child{
   margin-bottom: 60px;
 }

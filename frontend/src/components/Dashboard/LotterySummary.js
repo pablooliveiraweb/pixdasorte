@@ -15,7 +15,7 @@ const LotterySummary = ({ summary }) => {
           {summary.map((lottery) => (
             <tr key={lottery.id}>
               <td>{lottery.name}</td>
-              <td>R$ {(+lottery.totalpaidamount || 0).toFixed(2)}</td>
+              <td className="winner-highlight">R$ {(+lottery.totalpaidamount || 0).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
