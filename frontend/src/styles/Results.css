@@ -1,45 +1,25 @@
-.results-container {
-  text-align: center;
-  padding: 50px 20px;
+.results {
+  padding: 20px;
 }
 
-.results-container h1 {
-  font-size: 36px;
-  color: #333;
+.results h2 {
+  margin-bottom: 20px;
 }
 
-.results-container .results-list {
-  margin-top: 30px;
-}
-
-.results-container .results-list ul {
-  list-style: none;
-  padding: 0;
-}
-
-.results-container .results-list ul li {
+.result-card {
   background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.results-container .results-list ul li .result-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+.result-card p {
+  margin: 0 0 10px;
+  font-size: 16px;
 }
 
-.results-container .results-list ul li .result-header h3 {
-  margin: 0;
-}
-
-.results-container .results-list ul li .result-body {
-  margin-top: 10px;
-}
-
-.results-container .results-list ul li .result-body p {
-  margin: 5px 0;
+.error {
+  color: red;
 }

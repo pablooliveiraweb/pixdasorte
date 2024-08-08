@@ -2,7 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const uuid = require('uuid');
-const { createLottery, getLotteries, getTicketsByLotteryId, drawLottery, deleteLottery, getActiveLottery, getTotalPaidAmount, getAccumulatedPrize } = require('../controllers/lotteryController');
+const { createLottery, getLotteries, getTicketsByLotteryId, drawLottery, deleteLottery, getActiveLottery, getTotalPaidAmount, getAccumulatedPrize,  } = require('../controllers/lotteryController');
+
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.post('/:id/draw', protect, admin, drawLottery);
 router.delete('/:id', protect, admin, deleteLottery);
 router.get('/:id/total-paid-amount', getTotalPaidAmount);
 router.get('/:id/accumulated-prize', getAccumulatedPrize);
+
 
 
 module.exports = router;

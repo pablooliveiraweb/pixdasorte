@@ -98,6 +98,22 @@ const getWinners = async (req, res) => {
   }
 };
 
+const getFinishedLotteries = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT l.id, l.name AS lottery_name, l.end_date, l.drawn_ticket, u.name AS winner_name, l.prize
+      FROM lotteries l
+      JOIN users u ON l.winner_user_id = u.id
+      WHERE l.drawn_ticket IS NOT NULL
+      ORDER BY l.end_date DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar resultados dos sorteios:', error);
+    res.status(500).json({ message: 'Erro ao buscar resultados dos sorteios.' });
+  }
+};
+
 module.exports = { 
   getTickets, 
   getUsers, 
@@ -105,4 +121,5 @@ module.exports = {
   getUserCount,
   getLotterySummary,
   getWinners, 
+  getFinishedLotteries,
 };

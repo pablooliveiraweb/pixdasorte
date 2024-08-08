@@ -64,7 +64,25 @@ th {
 }
 
 .winner-highlight {
-  background: #beeba4;
+  background: #a3e57c;
   font-weight: bold;
   border-radius: 2px !important;
+  display:  revert;
+  
+}
+.winner-highlight span{
+  float: right !important;
+}
+
+.winner-highlight2 {
+  background: rgb(82, 163, 12);
+  font-weight: bold;
+  color: #ebe9e9;
+  border-radius: 2px !important;
+  font-size: 1.4rem;
+  
+}
+
+.winner-highlight2 span {
+  float: right;
 }

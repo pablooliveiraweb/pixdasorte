@@ -174,6 +174,8 @@ const getAccumulatedPrize = async (req, res) => {
 };
 
 
+
+
 module.exports = {
   createLottery,
   getLotteries,
@@ -183,4 +185,5 @@ module.exports = {
   getActiveLottery,
   getTotalPaidAmount,
   getAccumulatedPrize,
+  
 };

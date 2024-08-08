@@ -24,7 +24,6 @@ app.use(express.json());
 releasePendingTickets();
 updatePaymentStatusPeriodically();
 
-
 const fs = require('fs');
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -53,8 +52,6 @@ app.post('/api/lotteries', upload.single('image'), (req, res, next) => {
 });
 
 app.use('/uploads', express.static(uploadDir));
-
-
 
 app.use(errorHandler);
 

@@ -21,7 +21,7 @@ const Header = () => {
           <li><Link to="/my-tickets">Meus Bilhetes</Link></li>
           {user ? (
             <>
-              <li><span>Olá, {user.name}</span></li>
+              <li><span>Olá, <span className="user-header">{user.name}</span></span></li>
               <li><button onClick={logout}>Sair</button></li>
             </>
           ) : (
